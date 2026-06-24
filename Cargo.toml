@@ -1,0 +1,12 @@
+[package]
+name = "vscience"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+inquire = "0.9.4"
+maturin = "1.14.1"
+pyo3 = "0.29.0"
+serde = "1.0.228"
+toml_edit = "0.25.12"
+which = "8.0.4"
