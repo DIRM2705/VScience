@@ -1,17 +1,19 @@
 mod environment;
 mod tests;
+mod commands;
 
 use environment::*;
 use tests::*;
-use std::env;
-use std::path::Path;
 
-pub fn init(project_name: &str, project_dir: &str) {
+use std::env;
+use std::path::{Path, PathBuf};
+use commands::*;
+use clap::{Parser, Subcommand, Arg};
+
+pub fn init(project_name: &str, project_dir: &PathBuf) {
     /*
     Creates the virtual environment and the project structure for the ML project
     */
-
-    let project_dir = Path::new(project_dir);
 
     let env = Environment::new(project_dir);
 
@@ -58,37 +60,25 @@ pub fn help()
     println!("  help                               Displays this help message.");
 }
 
+#[derive(Parser)]
+#[command(name = "vscience")]
+#[command(about = "A tool for creating, managing and documenting ML projects.", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        help();
-        return;
-    }
+    let cli = Cli::parse();
 
-    let cmd = args[1].as_str();
-    match cmd {
-        "init" => {
-            let mut project_name = args[2].as_str();
-            let mut project_dir = args[3].as_str();
-
-            if project_name.is_empty()
-            {
-                project_name = "my_project";
-            }
-
-            if project_dir.is_empty()
-            {
-                project_dir = ".";
-            }
-
-            init(project_name, project_dir);
+    match &cli.command {
+        Some(Commands::Init { project_name, project_dir }) => {
+            let project_name_arg = project_name.clone().unwrap_or(String::from("my-ml-project"));
+            let project_dir_arg = project_dir.clone().unwrap_or_else(|| PathBuf::from("."));
+            init(&project_name_arg, &project_dir_arg);
         }
-        "help" => {
+        None => {
             help();
         }
-        _ => {
-            eprintln!("Unknown command: {}", cmd);
-        }
-        
     }
 }
