@@ -3,12 +3,9 @@ mod tests;
 mod commands;
 
 use environment::*;
-use tests::*;
-
-use std::env;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use commands::*;
-use clap::{Parser, Subcommand, Arg};
+use clap::Parser;
 
 pub fn init(project_name: &str, project_dir: &PathBuf) {
     /*
