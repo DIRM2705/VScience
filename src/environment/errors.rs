@@ -11,11 +11,22 @@ impl fmt::Display for dyn EnvironmentError {
     }
 }
 
-pub struct PromptingError;
+pub struct EnvironmentCreationError
+{
+    error_msg : String
+}
 
-impl EnvironmentError for PromptingError {
+impl EnvironmentCreationError {
+    pub fn new(msg : &str) -> Self {
+        EnvironmentCreationError {
+            error_msg: msg.to_string()
+        }
+    }
+}
+
+impl EnvironmentError for EnvironmentCreationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Failed to get user input for dependencies.")
+        write!(f, "Failed to create environment. Error: {}", self.error_msg)
     }
 }
 

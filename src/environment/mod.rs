@@ -1,10 +1,9 @@
 mod errors;
 
 use errors::*;
-use inquire::{MultiSelect, formatter::MultiOptionFormatter};
-use std::path::{Path, PathBuf};
-use std::fs::{File, create_dir_all, write, remove_dir_all};
-use std::process::{Command, exit};
+use std::fs::{File, create_dir_all, write};
+use std::path::PathBuf;
+use std::process::Command;
 use toml_edit::{Array, DocumentMut, Item, Table, Value};
 use which::which;
 
@@ -13,10 +12,21 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(path: &Path) -> Self {
-        Environment {
-            path : path.to_path_buf()
+    pub fn new(project_dir: &PathBuf) -> Result<Self, Box<dyn EnvironmentError>> {
+        /*
+        Creates a new Environment instance with the given path
+        */
+
+        if !project_dir.exists() || !project_dir.is_dir() {
+            return Err(Box::new(EnvironmentCreationError::new(
+                "The specified project directory does not exist or is not a directory.",
+            )));
         }
+
+        let env = Environment {
+            path: project_dir.clone(),
+        };
+        return Ok(env);
     }
 
     pub fn verify_environment(&self) -> Result<(), Box<dyn EnvironmentError>> {
@@ -30,28 +40,9 @@ impl Environment {
         let venv_path = self.path.join(".venv");
 
         if venv_path.exists() {
-            let answer = inquire::Confirm::new("A project already exists. Do you want to delete it?")
-                .with_default(false)
-                .prompt();
-
-            match answer {
-                Ok(true) => {
-                    let remove_result = remove_dir_all(venv_path);
-
-                    if remove_result.is_err() {
-                        return Err(Box::new(UVFailedError::new(
-                            "Failed to remove existing virtual environment.",
-                        )));
-                    }
-                }
-                Ok(false) => {
-                    println!("Aborting the initialization process.");
-                    exit(0);
-                }
-                Err(_) => {
-                    return Err(Box::new(PromptingError));
-                }
-            }
+            return Err(Box::new(EnvironmentCreationError::new(
+                "The virtual environment already exists. Please remove it before proceeding.",
+            )));
         }
 
         return Ok(());
@@ -68,9 +59,9 @@ impl Environment {
         // Create the virtual environment using uv
 
         let environment_creation_cmd = Command::new("uv")
-        .arg("venv")
-        .current_dir(&self.path)
-        .status();
+            .arg("venv")
+            .current_dir(&self.path)
+            .status();
 
         if environment_creation_cmd.is_err() {
             return Err(Box::new(UVFailedError::new("Failed to run uv command.")));
@@ -94,17 +85,26 @@ impl Environment {
         let data_root = self.path.join("data");
         let data_dir_creation_result = create_dir_all(&data_root);
         if let Err(e) = data_dir_creation_result {
-            return Err(DirCreationError::from_error(&data_root.to_string_lossy(), Box::new(e)));
+            return Err(DirCreationError::from_error(
+                &data_root.to_string_lossy(),
+                Box::new(e),
+            ));
         }
 
         let processed_dir_creation_result = create_dir_all(&data_root.join("processed"));
         if let Err(e) = processed_dir_creation_result {
-            return Err(DirCreationError::from_error(&data_root.join("processed").to_string_lossy(), Box::new(e)));
+            return Err(DirCreationError::from_error(
+                &data_root.join("processed").to_string_lossy(),
+                Box::new(e),
+            ));
         }
 
         let raw_dir_creation_result = create_dir_all(&data_root.join("raw"));
         if let Err(e) = raw_dir_creation_result {
-            return Err(DirCreationError::from_error(&data_root.join("raw").to_string_lossy(), Box::new(e)));
+            return Err(DirCreationError::from_error(
+                &data_root.join("raw").to_string_lossy(),
+                Box::new(e),
+            ));
         }
 
         return Ok(());
@@ -119,7 +119,10 @@ impl Environment {
 
         let src_dir_creation_result = create_dir_all(&src_root);
         if let Err(e) = src_dir_creation_result {
-            return Err(Box::new(DirCreationError::from_error(&src_root.to_string_lossy(), Box::new(e))));
+            return Err(Box::new(DirCreationError::from_error(
+                &src_root.to_string_lossy(),
+                Box::new(e),
+            )));
         }
 
         // Create template files
@@ -166,6 +169,15 @@ impl Environment {
         self.make_data_dir()?;
         self.make_src_dir()?;
 
+        let models_root = self.path.join("models");
+        let models_dir_creation_result = create_dir_all(&models_root);
+        if let Err(e) = models_dir_creation_result {
+            return Err(Box::new(DirCreationError::from_error(
+                &models_root.to_string_lossy(),
+                Box::new(e),
+            )));
+        }
+
         let experiments_root = self.path.join("experiments");
 
         let experiments_dir_creation_result = create_dir_all(&experiments_root);
@@ -178,43 +190,32 @@ impl Environment {
         return Ok(());
     }
 
-    fn select_dependencies(&self) -> Result<Vec<&'static str>, Box<dyn EnvironmentError>> {
+    fn project_name_is_valid(&self, project_name: &str) -> bool {
         /*
-        Prompts the user to select dependencies for the project
+        Validates the project name
         */
-        let dependencies = vec![
-            "numpy",
-            "pandas",
-            "polars",
-            "scikit-learn",
-            "matplotlib",
-            "seaborn",
-            "tensorflow",
-            "torch",
-            "xgboost",
-            "lightgbm",
-            "catboost",
-        ];
-
-        let formatter: MultiOptionFormatter<'_, &str> = &|a| format!("{} dependencies", a.len());
-        let answer = MultiSelect::new("Select dependencies for the project", dependencies)
-            .with_formatter(formatter)
-            .prompt();
-
-        if answer.is_err() {
-            return Err(Box::new(PromptingError));
-        }
-
-        Ok(answer.unwrap())
+        return !project_name.is_empty()
+            && project_name
+                .chars()
+                .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+            && project_name.chars().next().unwrap_or_default().is_alphabetic() // First character must be alphabetic
+            && project_name.len() <= 50;
     }
 
     pub fn generate_ml_pyproject_toml(
         &self,
         project_name: &str,
+        selected_dependencies: Vec<&str>,
     ) -> Result<(), Box<dyn EnvironmentError>> {
         /*
         Generates the pyproject.toml file for the ML project
         */
+
+        if !self.project_name_is_valid(project_name) {
+            return Err(Box::new(EnvironmentCreationError::new(
+                "Project name must be non-empty and can only contain alphanumeric characters, hyphens, and underscores.",
+            )));
+        }
 
         let mut doc = DocumentMut::new();
 
@@ -233,9 +234,9 @@ impl Environment {
         project.insert("requires-python", Value::from(">=3.11").into());
 
         // Dependencies
-        let selection = self.select_dependencies()?;
+        
         let mut dependencies = Array::new();
-        for dep in selection {
+        for dep in selected_dependencies {
             dependencies.push(Value::from(dep));
         }
         project.insert("dependencies", Value::Array(dependencies).into());
