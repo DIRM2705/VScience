@@ -48,15 +48,6 @@ pub fn init(project_name: &str, project_dir: &PathBuf) {
     println!("Virtual environment synced successfully.");
 }
 
-pub fn help()
-{
-    /* Displays help information */
-    println!("Usage: vscience <command> [<arguments>...]");
-    println!("Commands:");
-    println!("  init <project_name> <project_dir>  Creates a new ML project with the given name and directory.");
-    println!("  help                               Displays this help message.");
-}
-
 #[derive(Parser)]
 #[command(name = "vscience")]
 #[command(about = "A tool for creating, managing and documenting ML projects.", long_about = None)]
@@ -75,7 +66,7 @@ fn main() {
             init(&project_name_arg, &project_dir_arg);
         }
         None => {
-            help();
+            eprintln!("No command provided. Use --help for more information.");
         }
     }
 }
