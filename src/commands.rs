@@ -26,7 +26,7 @@ pub enum Commands
 
     Add
     {
-        #[arg(short, long, help = "Name of the package to be added")]
+        #[arg(help = "Name of the package to be added")]
         package_name: String,
 
         #[arg(short='r', long, help = "Requirements file to install packages from")]
@@ -38,7 +38,7 @@ pub enum Commands
 
     Remove
     {
-        #[arg(short, long, help = "Name of the package to be removed")]
+        #[arg(help = "Name of the package to be removed")]
         package_name: String
     },
 }
