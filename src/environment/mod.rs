@@ -300,7 +300,7 @@ impl Environment {
 }
 
 
-pub fn add_package(package_name: &str, requirements_file: &Option<PathBuf>, constraints_file: &Option<PathBuf>) -> Result<(), Box<dyn EnvironmentError>> {
+pub fn add_package(package_name: &Option<String>, requirements_file: &Option<PathBuf>, constraints_file: &Option<PathBuf>) -> Result<(), Box<dyn EnvironmentError>> {
     /*
     Adds a package to the project using uv
     */
@@ -308,11 +308,12 @@ pub fn add_package(package_name: &str, requirements_file: &Option<PathBuf>, cons
         return Err(Box::new(UVMissingError));
     }
 
-    
-
     let mut add_cmd = &mut Command::new("uv");
+    add_cmd = add_cmd.arg("add");
 
-    add_cmd = add_cmd.arg("add").arg(package_name);
+    if let Some(package_name) = package_name {
+        add_cmd = add_cmd.arg(package_name);
+    }
 
     if let Some(requirements_file) = requirements_file {
         add_cmd = add_cmd.arg("-r").arg(requirements_file);
