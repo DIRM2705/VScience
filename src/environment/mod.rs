@@ -244,14 +244,12 @@ impl Environment {
         doc.insert("project", Item::Table(project));
 
         // Modern uv workspace
-        let mut tool_uv = Table::new();
-        tool_uv.insert(
-            "dev-dependencies",
-            Item::Value(Value::Array(vec!["uv", "pytest"].into_iter().collect())),
+        let mut dependency_groups = Table::new();
+        dependency_groups.insert(
+            "dev",
+            Item::Value(Value::Array(vec!["uv", "pytest"].into_iter().collect())).into(),
         );
-        let mut tool = Table::new();
-        tool.insert("uv", Item::Table(tool_uv));
-        doc.insert("tool", Item::Table(tool));
+        doc.insert("dependency-groups", Item::Table(dependency_groups));
 
         let file_path = self.path.join("pyproject.toml");
         let write_result = write(file_path, doc.to_string());
