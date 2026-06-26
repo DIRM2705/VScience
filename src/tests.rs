@@ -1,7 +1,7 @@
 #[cfg(test)]
-pub mod tests
-{
-    use crate::environment::Environment;
+pub mod tests {
+
+    use crate::environment::*;
 
     #[test]
     fn test_environment_creation() {
@@ -29,7 +29,10 @@ pub mod tests
 
         println!("Project directory: {:?}", project_dir);
         println!("Does the project directory exist? {}", project_dir.exists());
-        println!("Is the project directory a directory? {}", project_dir.is_dir());
+        println!(
+            "Is the project directory a directory? {}",
+            project_dir.is_dir()
+        );
 
         let env = Environment::new(&project_dir);
         assert!(env.is_err());
@@ -38,7 +41,6 @@ pub mod tests
     #[test]
     fn test_pyproject_toml() {
         let project_dir = std::path::PathBuf::from("./test_project_dir");
-
 
         let env = Environment::new(&project_dir).ok().unwrap();
         let result = env.generate_ml_pyproject_toml("test_project", vec![]);
@@ -58,7 +60,8 @@ pub mod tests
 
     #[test]
     fn test_pyproject_toml_long_name() {
-        let project_name = "a_very_long_project_name_that_exceeds_typical_length_limits_for_testing_purposes";
+        let project_name =
+            "a_very_long_project_name_that_exceeds_typical_length_limits_for_testing_purposes";
         let project_dir = std::path::PathBuf::from("./test_project_dir");
 
         let env = Environment::new(&project_dir).ok().unwrap();
@@ -85,8 +88,5 @@ pub mod tests
         let env = Environment::new(&project_dir).ok().unwrap();
         let validation_result = env.verify_environment();
         assert!(validation_result.is_err());
-
-        // Clean up after the test
-        std::fs::remove_dir_all(&project_dir).unwrap();
     }
 }
