@@ -298,3 +298,75 @@ impl Environment {
         return Ok(());
     }
 }
+
+
+pub fn add_package(package_name: &str, requirements_file: &Option<PathBuf>, constraints_file: &Option<PathBuf>) -> Result<(), Box<dyn EnvironmentError>> {
+    /*
+    Adds a package to the project using uv
+    */
+    if which("uv").is_err() {
+        return Err(Box::new(UVMissingError));
+    }
+
+    
+
+    let mut add_cmd = &mut Command::new("uv");
+
+    add_cmd = add_cmd.arg("add").arg(package_name);
+
+    if let Some(requirements_file) = requirements_file {
+        add_cmd = add_cmd.arg("-r").arg(requirements_file);
+    }
+
+    if let Some(constraints_file) = constraints_file {
+        add_cmd = add_cmd.arg("-c").arg(constraints_file);
+    }
+
+    let cmd_status_result = add_cmd.status();
+
+    if cmd_status_result.is_err() {
+        return Err(Box::new(UVFailedError::new(
+            "Failed to run add package command.",
+        )));
+    }
+
+    let add_status = cmd_status_result.unwrap();
+
+    if !add_status.success() {
+        return Err(Box::new(UVFailedError::new(
+            "Failed to add package using uv.",
+        )));
+    }
+
+    return Ok(());
+}
+
+pub fn remove_package(package_name: &str) -> Result<(), Box<dyn EnvironmentError>> {
+    /*
+    Removes a package from the project using uv
+    */
+    if which("uv").is_err() {
+        return Err(Box::new(UVMissingError));
+    }
+
+    let remove_cmd = Command::new("uv")
+        .arg("remove")
+        .arg(package_name)
+        .status();
+
+    if remove_cmd.is_err() {
+        return Err(Box::new(UVFailedError::new(
+            "Failed to run remove package command.",
+        )));
+    }
+
+    let remove_status = remove_cmd.unwrap();
+
+    if !remove_status.success() {
+        return Err(Box::new(UVFailedError::new(
+            "Failed to remove package using uv.",
+        )));
+    }
+
+    return Ok(());
+}

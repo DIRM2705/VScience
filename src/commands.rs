@@ -22,6 +22,24 @@ pub enum Commands
 
         #[arg(short='d', long, value_parser = verify_path, help = "Directory where the project will be created")]
         project_dir: Option<PathBuf>
-    }
+    },
+
+    Add
+    {
+        #[arg(short, long, help = "Name of the package to be added")]
+        package_name: String,
+
+        #[arg(short='r', long, help = "Requirements file to install packages from")]
+        requirements_file: Option<PathBuf>,
+
+        #[arg(short='c', long, help = "Constraints file path")]
+        constraints_file: Option<PathBuf>
+    },
+
+    Remove
+    {
+        #[arg(short, long, help = "Name of the package to be removed")]
+        package_name: String
+    },
 }
 

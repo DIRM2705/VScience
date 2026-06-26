@@ -6,7 +6,7 @@ use clap::Parser;
 use commands::*;
 use environment::*;
 use inquire::{MultiSelect, formatter::MultiOptionFormatter};
-use std::fs::{remove_dir_all};
+use std::fs::remove_dir_all;
 use std::path::PathBuf;
 
 struct PromptingError;
@@ -156,8 +156,27 @@ fn main() {
                 .unwrap_or(String::from("my-ml-project"));
             let project_dir_arg = project_dir.clone().unwrap_or_else(|| PathBuf::from("."));
             init(&project_name_arg, &project_dir_arg);
+        }
+
+        Some(Commands::Add {
+            package_name,
+            requirements_file,
+            constraints_file,
+        }) => 
+        {
+            let cmd_result = add_package(package_name, requirements_file, constraints_file);
+            if cmd_result.is_err() {
+                eprint!("{}", cmd_result.err().unwrap());
+            }
         },
         
+        Some(Commands::Remove { package_name }) => {
+            let cmd_result = remove_package(package_name);
+            if cmd_result.is_err() {
+                eprint!("{}", cmd_result.err().unwrap());
+            }
+        },
+
         None => {
             eprintln!("No command provided. Use --help for more information.");
         }
