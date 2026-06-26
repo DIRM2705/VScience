@@ -136,7 +136,7 @@ pub fn init(project_name: &str, project_dir: &PathBuf) {
 }
 
 #[derive(Parser)]
-#[command(name = "vscience")]
+#[command(name = "vsci")]
 #[command(about = "A tool for creating, managing and documenting ML projects.", long_about = None)]
 struct Cli {
     #[command(subcommand)]
@@ -156,7 +156,8 @@ fn main() {
                 .unwrap_or(String::from("my-ml-project"));
             let project_dir_arg = project_dir.clone().unwrap_or_else(|| PathBuf::from("."));
             init(&project_name_arg, &project_dir_arg);
-        }
+        },
+        
         None => {
             eprintln!("No command provided. Use --help for more information.");
         }
