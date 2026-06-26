@@ -26,7 +26,7 @@ pub enum Commands
 
     Add
     {
-        #[arg(short, long, value_name = "PACKAGE", help = "Name of the package to be added")]
+        #[arg(help = "Name of the package to be added")]
         package_name: Option<String>,
 
         #[arg(short='r', long, help = "Requirements file to install packages from")]
