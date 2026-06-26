@@ -15,7 +15,6 @@
     vsci add [dependency_name]
 ```
 **Options:**
-- `-d` `[dependency_name]`: The name of the dependency you want to add to your project.
 - `-r` `[requirements_file]`: Specify a requirements file to add multiple dependencies at once.
 - `-c` `[constraints_file]`: Specify a constraints file to add dependencies with specific version constraints.
 
