@@ -80,7 +80,7 @@ pub fn init(project_name: &str, project_dir: &PathBuf) {
 
         match answer {
             Ok(true) => {
-                let remove_result = remove_dir_all(project_dir);
+                let remove_result = remove_dir_all(project_dir.join(".venv"));
 
                 if remove_result.is_err() {
                     eprint!("Failed to remove existing project directory.");
